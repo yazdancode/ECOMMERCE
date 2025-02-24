@@ -1,5 +1,7 @@
 from pathlib import Path
 
+from decouple import config
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "django-insecure-d_p5gi2ir9#0un@r7i9o85d3mj!f&56^rblq9i6ztlsa11ba)!"
 DEBUG = True
@@ -17,6 +19,7 @@ INSTALLED_APPS = [
     "accounts.apps.AccountsConfig",
     "home.apps.HomeConfig",
     "django_jalali",
+    "storages",
 ]
 
 MIDDLEWARE = [
@@ -94,3 +97,11 @@ MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 JALALI_DATE_FORMAT = "%Y/%m/%d"
+
+DEFAULT_FILE_STORAGE = "storages.backends.s3.S3Storage"
+AWS_ACCESS_KEY_ID = config("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = config("AWS_SECRET_ACCESS_KEY")
+AWS_S3_ENDPOINT_URL = config("AWS_S3_ENDPOINT_URL")
+AWS_STORAGE_BUCKET_NAME = config("AWS_STORAGE_BUCKET_NAME")
+AWS_SERVER_NAME = "s3"
+AWS_S3_FILE_OVERWRITE = False

@@ -7,7 +7,7 @@ from django.shortcuts import redirect, render
 from django.utils.timezone import now
 from django.views import View
 
-from accounts.forms import UserRegisterForm, VerifyCodeForm, LoginForm
+from accounts.forms import LoginForm, UserRegisterForm, VerifyCodeForm
 from accounts.models import OtpCode, User
 from accounts.utils.utils import send_top_code
 

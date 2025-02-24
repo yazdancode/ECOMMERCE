@@ -2,11 +2,12 @@ import random
 from datetime import timedelta
 
 from django.contrib import messages
+from django.contrib.auth import login, logout
 from django.shortcuts import redirect, render
 from django.utils.timezone import now
 from django.views import View
 
-from accounts.forms import UserRegisterForm, VerifyCodeForm
+from accounts.forms import UserRegisterForm, VerifyCodeForm, LoginForm
 from accounts.models import OtpCode, User
 from accounts.utils.utils import send_top_code
 
@@ -80,3 +81,33 @@ class VerifyCodeView(View):
                 return redirect("verify_code")
         else:
             return render(request, self.template_name, {"form": form})
+
+
+class LoginView(View):
+    form_class = LoginForm
+    template_name = "accounts/login.html"
+
+    def get(self, request):
+        form = self.form_class()
+        return render(request, self.template_name, {"form": form})
+
+    def post(self, request):
+        form = self.form_class(request.POST)
+        if form.is_valid():
+            phone_number = form.cleaned_data["phone_number"]
+            user = User.objects.get(phone_number=phone_number)
+            login(request, user)
+            return redirect("home")
+        return render(request, self.template_name, {"form": form})
+
+
+class LogoutView(View):
+    @staticmethod
+    def get(request):
+        logout(request)
+        return redirect("home")
+
+    @staticmethod
+    def post(request):
+        logout(request)
+        return redirect("home")

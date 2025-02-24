@@ -76,3 +76,12 @@ class VerifyCodeForm(forms.Form):
         if len(code) != 4:
             raise forms.ValidationError("کد تایید باید ۴ رقم باشد")
         return cd["code"]
+
+
+class LoginForm(forms.Form):
+    phone_number = forms.CharField(max_length=11, label="شماره تلفن همراه")
+    password = forms.CharField(
+        max_length=8,
+        label="رمز عبور",
+        widget=forms.PasswordInput,
+    )

@@ -7,8 +7,4 @@ class HomeView(View):
     @staticmethod
     def get(request):
         products = Product.objects.filter(available=True)
-        return render(request, "home/home.html", {'products': products})
-    
-
-
-
+        return render(request, "home/home.html", {"products": products})

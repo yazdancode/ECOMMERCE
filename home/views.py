@@ -1,14 +1,12 @@
 from django.contrib import messages
-from django.shortcuts import get_object_or_404, render, redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.views import View
 
 from home.models import Product
-from home.utils.tasks import (
-    all_bucket_objects_task,
-    delete_bucket_objects_task,
-    download_objects_task,
-    upload_objects_task,
-)
+from home.tasks.tasks import (all_bucket_objects_task,
+                              delete_bucket_objects_task,
+                              download_objects_task, upload_objects_task)
+from home.utils.utils import IsAdminUserMixin
 
 
 class HomeView(View):
@@ -25,7 +23,7 @@ class ProductDetailView(View):
         return render(request, "home/detail.html", {"product": product})
 
 
-class BucketHomeView(View):
+class BucketHomeView(IsAdminUserMixin, View):
     template_name = "home/bucket.html"
 
     def get(self, request):
@@ -33,7 +31,7 @@ class BucketHomeView(View):
         return render(request, self.template_name, {"objects": objects})
 
 
-class DeleteBucketHomeView(View):
+class DeleteBucketHomeView(IsAdminUserMixin, View):
     @staticmethod
     def get(request):
         keys = request.GET.get("keys")
@@ -43,7 +41,7 @@ class DeleteBucketHomeView(View):
         return redirect("buckets")
 
 
-class DownloadBucketHomeView(View):
+class DownloadBucketHomeView(IsAdminUserMixin, View):
     @staticmethod
     def get(request):
         keys = request.GET.get("keys")
@@ -53,7 +51,7 @@ class DownloadBucketHomeView(View):
         return redirect("buckets")
 
 
-class UploadBucketHomeView(View):
+class UploadBucketHomeView(IsAdminUserMixin, View):
     @staticmethod
     def get(request):
         key = request.GET.get("key")

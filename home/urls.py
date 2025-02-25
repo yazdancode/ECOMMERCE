@@ -1,4 +1,5 @@
-from django.urls import path, include
+from django.urls import include, path
+
 from home import views
 
 app_name = "home"
@@ -12,6 +13,8 @@ bucket_urls = [
 
 urlpatterns = [
     path("", views.HomeView.as_view(), name="home"),
-    path("buckets/", include(bucket_urls)),  # مسیرهای مربوط به bucketها
-    path("product/<slug:slug>/", views.ProductDetailView.as_view(), name="product_detail"),  # مسیر محصولات
+    path("buckets/", include(bucket_urls)),
+    path(
+        "product/<slug:slug>/", views.ProductDetailView.as_view(), name="product_detail"
+    ),
 ]

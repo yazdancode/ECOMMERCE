@@ -1,5 +1,6 @@
-from home.buckets.bucket import bucket
 from celery import shared_task
+
+from home.buckets.bucket import bucket
 
 
 # TODO : can be async?

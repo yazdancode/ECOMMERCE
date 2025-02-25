@@ -2,7 +2,7 @@ import random
 from datetime import timedelta
 
 from django.contrib import messages
-from django.contrib.auth import login, logout, authenticate
+from django.contrib.auth import login, logout
 from django.shortcuts import redirect, render
 from django.utils.timezone import now
 from django.views import View
@@ -35,7 +35,7 @@ class UserRegisterView(View):
                 "password": form.cleaned_data["password"],
             }
             messages.success(request, "کد تایید به شماره تلفن همراه شما ارسال شد")
-            return redirect("verify_code")
+            return redirect("accounts:verify_code")
         return render(request, self.template_name, {"form": form})
 
 
@@ -61,7 +61,7 @@ class VerifyCodeView(View):
         if now() > code_instance.created_at + timedelta(minutes=2):
             code_instance.delete()
             messages.error(request, "کد منقضی شده است، لطفاً دوباره درخواست ارسال کنید")
-            return redirect("verify_code")
+            return redirect("accounts:verify_code")
 
         form = self.form_class(request.POST)
         if form.is_valid():
@@ -95,9 +95,9 @@ class LoginView(View):
             phone_number = form.cleaned_data["phone_number"]
             user = User.objects.get(phone_number=phone_number)
             login(request, user)
-            messages.success(request, "ورود با موفقیت انجام شد", 'info')
+            messages.success(request, "ورود با موفقیت انجام شد", "info")
             return redirect("home:home")
-        messages.error(request, "کاربری با این شماره تلفن یافت نشد", 'warning')
+        messages.error(request, "کاربری با این شماره تلفن یافت نشد", "warning")
         return render(request, self.template_name, {"form": form})
 
 

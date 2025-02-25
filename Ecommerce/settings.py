@@ -87,21 +87,26 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 
+if not DEBUG:
+    STATICFILES_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
 AUTH_USER_MODEL = "accounts.User"
+DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
 
-MEDIA_URL = "/media/"
-MEDIA_ROOT = BASE_DIR / "media"
+MEDIA_URL = "https://s3.ir-tbz-sh1.arvanstorage.ir/django-shop-shop/"
 
-JALALI_DATE_FORMAT = "%Y/%m/%d"
-
-DEFAULT_FILE_STORAGE = "storages.backends.s3.S3Storage"
-AWS_ACCESS_KEY_ID = config("AWS_ACCESS_KEY_ID")
-AWS_SECRET_ACCESS_KEY = config("AWS_SECRET_ACCESS_KEY")
-AWS_S3_ENDPOINT_URL = config("AWS_S3_ENDPOINT_URL")
-AWS_STORAGE_BUCKET_NAME = config("AWS_STORAGE_BUCKET_NAME")
+AWS_ACCESS_KEY_ID = "a65d17fb-a6ab-4a75-af4f-c153713f592d"
+AWS_SECRET_ACCESS_KEY = (
+    "b8b7d92227c17814711f4dffcb6f649093946423ab69859777fbee673789d7a2"
+)
+AWS_STORAGE_BUCKET_NAME = "django-shop-shop"
+AWS_S3_ENDPOINT_URL = "https://s3.ir-tbz-sh1.arvanstorage.ir"
 AWS_SERVER_NAME = "s3"
 AWS_S3_FILE_OVERWRITE = False
+AWS_QUERYSTRING_AUTH = False
+AWS_DEFAULT_ACL = None
+AWS_S3_REGION_NAME = "ir-tbz-sh1"

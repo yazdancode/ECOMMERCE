@@ -20,9 +20,7 @@ class Product(models.Model):
     slug = models.SlugField(max_length=255, unique=True, verbose_name="نامک")
     description = models.TextField(blank=True, verbose_name="توضیحات")
     price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="قیمت")
-    image = models.ImageField(
-        upload_to="products/%Y/%m/%d", blank=True, verbose_name="تصویر"
-    )
+    image = models.ImageField(blank=True, verbose_name="تصویر")
     category = models.ForeignKey(
         Category,
         related_name="products",

@@ -28,5 +28,17 @@ class Bucket:
         else:
             return None
 
+    def delete_objects(self, keys):
+        self.conn.delete_objects(Bucket=settings.AWS_STORAGE_BUCKET_NAME, Key=keys)
+        return True
+
+    # def download_objects(self, keys):
+    #     self.conn.download_file(
+    #         Bucket=settings.AWS_STORAGE_BUCKET_NAME,
+    #         Key=keys,
+    #         Filename=settings.MEDIA_ROOT + keys,
+    #     )
+    #     return True
+
 
 bucket = Bucket()

@@ -142,4 +142,5 @@ templates
 accounts/static
 home/static
 media/
+static/*
 

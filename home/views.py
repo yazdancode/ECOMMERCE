@@ -2,18 +2,41 @@ from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views import View
 
-from home.models import Product
-from home.tasks.tasks import (all_bucket_objects_task,
-                              delete_bucket_objects_task,
-                              download_objects_task, upload_objects_task)
+from home.models import Category, Product
+from home.tasks.tasks import (
+    all_bucket_objects_task,
+    delete_bucket_objects_task,
+    download_objects_task,
+    upload_objects_task,
+)
 from home.utils.utils import IsAdminUserMixin
 
 
 class HomeView(View):
     @staticmethod
-    def get(request):
+    def get(request, category_slug=None):
         products = Product.objects.filter(available=True)
-        return render(request, "home/home.html", {"products": products})
+        categories = Category.objects.all()
+
+        # اگر category_slug داده شده باشد، فیلتر محصولات بر اساس دسته‌بندی خاص
+        if category_slug:
+            try:
+                category = Category.objects.get(slug=category_slug)
+                products = products.filter(category=category)
+            except Category.DoesNotExist:
+                raise Http404("این دسته‌بندی وجود ندارد.")
+        else:
+            category = None  # اگر دسته‌بندی انتخاب نشده باشد، مقدار None بدهیم.
+
+        return render(
+            request,
+            "home/home.html",
+            {
+                "products": products,
+                "categories": categories,
+                "selected_category": category,
+            },
+        )
 
 
 class ProductDetailView(View):

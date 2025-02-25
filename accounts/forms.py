@@ -64,7 +64,7 @@ class UserRegisterForm(forms.Form):
         phone_number = self.cleaned_data["phone_number"]
         if User.objects.filter(phone_number=phone_number).exists():
             raise forms.ValidationError("این شماره تلفن همراه قبلا ثبت شده است")
-        OtpCode.objects.filter(phone_number=phone_number).delete()
+        OtpCode.objects.filter(phone=phone_number).delete()
         return phone_number
 
 

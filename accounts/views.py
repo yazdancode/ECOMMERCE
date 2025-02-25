@@ -2,7 +2,7 @@ import random
 from datetime import timedelta
 
 from django.contrib import messages
-from django.contrib.auth import login, logout
+from django.contrib.auth import login, logout, authenticate
 from django.shortcuts import redirect, render
 from django.utils.timezone import now
 from django.views import View
@@ -17,8 +17,7 @@ class UserRegisterView(View):
     template_name = "accounts/register.html"
 
     def get(self, request):
-        form = self.form_class
-        return render(request, self.template_name, {"form": form})
+        return render(request, self.template_name, {"form": self.form_class()})
 
     def post(self, request):
         form = self.form_class(request.POST)
@@ -29,7 +28,7 @@ class UserRegisterView(View):
                 phone=form.cleaned_data["phone_number"],
                 code=code,
             )
-            request.session["user_registeratoin_info"] = {
+            request.session["user_registration_info"] = {
                 "phone_number": form.cleaned_data["phone_number"],
                 "email": form.cleaned_data["email"],
                 "fullname": form.cleaned_data["fullname"],
@@ -45,42 +44,41 @@ class VerifyCodeView(View):
     template_name = "accounts/verify.html"
 
     def get(self, request):
-        form = self.form_class
-        return render(request, self.template_name, {"form": form})
+        return render(request, self.template_name, {"form": self.form_class()})
 
     def post(self, request):
-        user_session = request.session["user_registeratoin_info"]
+        user_session = request.session.get("user_registration_info")
         if not user_session:
             messages.error(request, "اطلاعات ثبت‌نام یافت نشد")
             return redirect("register")
+
         try:
             code_instance = OtpCode.objects.get(phone=user_session["phone_number"])
         except OtpCode.DoesNotExist:
             messages.error(request, "کد وارد شده نامعتبر است")
             return redirect("verify_code")
-        expiration_time = code_instance.created_at + timedelta(minutes=2)
-        if now() > expiration_time:
+
+        if now() > code_instance.created_at + timedelta(minutes=2):
             code_instance.delete()
             messages.error(request, "کد منقضی شده است، لطفاً دوباره درخواست ارسال کنید")
             return redirect("verify_code")
+
         form = self.form_class(request.POST)
         if form.is_valid():
-            cd = form.cleaned_data
-            if cd["code"] == code_instance.code:
+            if form.cleaned_data["code"] == code_instance.code:
                 User.objects.create_user(
                     phone_number=user_session["phone_number"],
                     email=user_session["email"],
                     fullname=user_session["fullname"],
                     password=user_session["password"],
                 )
-                code_instance.delete()
+                OtpCode.objects.filter(phone=user_session["phone_number"]).delete()
+                del request.session["user_registration_info"]
                 messages.success(request, "ثبت نام با موفقیت انجام شد")
                 return redirect("home")
-            else:
-                messages.error(request, "کد وارد شده نامعتبر است")
-                return redirect("verify_code")
-        else:
-            return render(request, self.template_name, {"form": form})
+
+            messages.error(request, "کد وارد شده نامعتبر است")
+        return render(request, self.template_name, {"form": form})
 
 
 class LoginView(View):
@@ -97,7 +95,9 @@ class LoginView(View):
             phone_number = form.cleaned_data["phone_number"]
             user = User.objects.get(phone_number=phone_number)
             login(request, user)
-            return redirect("home")
+            messages.success(request, "ورود با موفقیت انجام شد", 'info')
+            return redirect("home:home")
+        messages.error(request, "کاربری با این شماره تلفن یافت نشد", 'warning')
         return render(request, self.template_name, {"form": form})
 
 
@@ -105,9 +105,10 @@ class LogoutView(View):
     @staticmethod
     def get(request):
         logout(request)
-        return redirect("home")
+        return redirect("home:home")
 
     @staticmethod
     def post(request):
         logout(request)
-        return redirect("home")
+        messages.success(request, "شما با موفقیت خارج شدید")
+        return redirect("home:home")

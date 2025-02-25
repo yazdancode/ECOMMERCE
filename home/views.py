@@ -3,7 +3,12 @@ from django.shortcuts import get_object_or_404, render, redirect
 from django.views import View
 
 from home.models import Product
-from home.utils.tasks import all_bucket_objects_task, delete_bucket_objects_task
+from home.utils.tasks import (
+    all_bucket_objects_task,
+    delete_bucket_objects_task,
+    download_objects_task,
+    upload_objects_task,
+)
 
 
 class HomeView(View):
@@ -27,6 +32,7 @@ class BucketHomeView(View):
         objects = all_bucket_objects_task()
         return render(request, self.template_name, {"objects": objects})
 
+
 class DeleteBucketHomeView(View):
     @staticmethod
     def get(request):
@@ -36,3 +42,23 @@ class DeleteBucketHomeView(View):
             messages.success(request, "شیء شما به زودی حذف می‌شود.", "info")
         return redirect("buckets")
 
+
+class DownloadBucketHomeView(View):
+    @staticmethod
+    def get(request):
+        keys = request.GET.get("keys")
+        if keys:
+            download_objects_task.delay(keys)
+            messages.success(request, "بارگیری شما به زودی شروع می شود.", "info")
+        return redirect("buckets")
+
+
+class UploadBucketHomeView(View):
+    @staticmethod
+    def get(request):
+        key = request.GET.get("key")
+        file_path = request.GET.get("file_path")
+        if key and file_path:
+            upload_objects_task.delay(file_path, key)
+            messages.success(request, "بارگذاری شما به زودی آغاز می شود.", "info")
+        return redirect("buckets")

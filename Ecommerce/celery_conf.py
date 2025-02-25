@@ -10,7 +10,7 @@ app = Celery("Ecommerce")
 app.autodiscover_tasks()
 
 
-app.conf.broker_url = 'redis://localhost:6379/0'
+app.conf.broker_url = "redis://localhost:6379/0"
 app.conf.result_backend = "rpc://"
 app.conf.task_serializer = "json"
 app.conf.result_serializer = "json"

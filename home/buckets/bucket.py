@@ -8,8 +8,8 @@ class Bucket:
     init method creates connection.
 
     Note:
-        none of these methods are async.
-        use public interface in tasks.py module instead.
+        None of these methods are async.
+        Use the public interface in the tasks.py module instead.
     """
 
     def __init__(self):
@@ -22,23 +22,30 @@ class Bucket:
         )
 
     def get_objects(self):
+        """Retrieve the list of objects in the S3 bucket."""
         result = self.conn.list_objects_v2(Bucket=settings.AWS_STORAGE_BUCKET_NAME)
-        if result["KeyCount"]:
-            return result["Contents"]
-        else:
-            return None
+        return result.get("Contents", [])
 
     def delete_objects(self, keys):
-        self.conn.delete_objects(Bucket=settings.AWS_STORAGE_BUCKET_NAME, Key=keys)
+        """Delete multiple objects from the S3 bucket."""
+        if isinstance(keys, str):
+            keys = [keys]
+        objects = [{"Key": key} for key in keys]
+        self.conn.delete_objects(
+            Bucket=settings.AWS_STORAGE_BUCKET_NAME, Delete={"Objects": objects}
+        )
         return True
 
-    # def download_objects(self, keys):
-    #     self.conn.download_file(
-    #         Bucket=settings.AWS_STORAGE_BUCKET_NAME,
-    #         Key=keys,
-    #         Filename=settings.MEDIA_ROOT + keys,
-    #     )
-    #     return True
+    def download_objects(self, key):
+        """Download an object from the S3 bucket."""
+        local_path = f"{settings.AWS_LOCAL_STORAGE}/{key}"
+        with open(local_path, "wb") as f:
+            self.conn.download_fileobj(settings.AWS_STORAGE_BUCKET_NAME, key, f)
+
+    def upload_objects(self, file_path, key):
+        """Upload an object to the S3 bucket."""
+        with open(file_path, "rb") as f:
+            self.conn.upload_fileobj(f, settings.AWS_STORAGE_BUCKET_NAME, key)
 
 
 bucket = Bucket()

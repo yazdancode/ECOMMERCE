@@ -135,8 +135,10 @@ path to the file which used by sqlite
 myenv
 media
 accounts/migrations
+orders/migrations
 home/migrations
 accounts/templates
+orders/templates
 home/templates
 templates
 accounts/static

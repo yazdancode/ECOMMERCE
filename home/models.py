@@ -50,6 +50,7 @@ class Product(models.Model):
     name = models.CharField(max_length=255, verbose_name="نام محصول")
     slug = models.SlugField(max_length=255, unique=True, verbose_name="نامک")
     description = models.TextField(blank=True, verbose_name="توضیحات")
+    stock = models.PositiveIntegerField(default=0, verbose_name='موجودی') 
     price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="قیمت")
     image = models.ImageField(
         blank=True, null=True, upload_to="products/", verbose_name="تصویر"

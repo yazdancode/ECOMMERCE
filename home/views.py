@@ -3,30 +3,23 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views import View
 
 from home.models import Category, Product
-from home.tasks.tasks import (
-    all_bucket_objects_task,
-    delete_bucket_objects_task,
-    download_objects_task,
-    upload_objects_task,
-)
+from home.tasks.tasks import (all_bucket_objects_task,
+                              delete_bucket_objects_task,
+                              download_objects_task, upload_objects_task)
 from home.utils.utils import IsAdminUserMixin
+from orders.forms import CartAddForm
 
 
 class HomeView(View):
     @staticmethod
     def get(request, category_slug=None):
         products = Product.objects.filter(available=True)
-        categories = Category.objects.all()
-
-        # اگر category_slug داده شده باشد، فیلتر محصولات بر اساس دسته‌بندی خاص
+        categories = Category.objects.filter(sub_category__isnull=True)
+        sub_categories = Category.objects.filter(sub_category__isnull=False)
+        category = None
         if category_slug:
-            try:
-                category = Category.objects.get(slug=category_slug)
-                products = products.filter(category=category)
-            except Category.DoesNotExist:
-                raise Http404("این دسته‌بندی وجود ندارد.")
-        else:
-            category = None  # اگر دسته‌بندی انتخاب نشده باشد، مقدار None بدهیم.
+            category = get_object_or_404(Category, slug=category_slug)
+            products = products.filter(category=category)
 
         return render(
             request,
@@ -34,6 +27,7 @@ class HomeView(View):
             {
                 "products": products,
                 "categories": categories,
+                "sub_categories": sub_categories,
                 "selected_category": category,
             },
         )
@@ -43,7 +37,8 @@ class ProductDetailView(View):
     @staticmethod
     def get(request, slug):
         product = get_object_or_404(Product, slug=slug)
-        return render(request, "home/detail.html", {"product": product})
+        form = CartAddForm()
+        return render(request, "home/detail.html", {"product": product, "form": form})
 
 
 class BucketHomeView(IsAdminUserMixin, View):
@@ -59,7 +54,9 @@ class DeleteBucketHomeView(IsAdminUserMixin, View):
     def get(request):
         keys = request.GET.get("keys")
         if keys:
-            delete_bucket_objects_task.delay(keys)
+            delete_bucket_objects_task.delay(
+                keys.split(",")
+            )  # اصلاح پردازش لیست کلیدها
             messages.success(request, "شیء شما به زودی حذف می‌شود.", "info")
         return redirect("buckets")
 
@@ -69,7 +66,7 @@ class DownloadBucketHomeView(IsAdminUserMixin, View):
     def get(request):
         keys = request.GET.get("keys")
         if keys:
-            download_objects_task.delay(keys)
+            download_objects_task.delay(keys.split(","))  # اصلاح پردازش لیست کلیدها
             messages.success(request, "بارگیری شما به زودی شروع می شود.", "info")
         return redirect("buckets")
 

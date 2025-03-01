@@ -22,6 +22,8 @@ INSTALLED_APPS = [
     "django_jalali",
     "storages",
     "django_celery_beat",
+    "crispy_forms",
+    "orders.apps.OrdersConfig",
 ]
 
 MIDDLEWARE = [
@@ -114,3 +116,5 @@ AWS_QUERYSTRING_AUTH = False
 AWS_DEFAULT_ACL = None
 AWS_S3_REGION_NAME = "ir-tbz-sh1"
 AWS_LOCAL_STORAGE = f"{BASE_DIR}/aws/"
+
+CRISPY_TEMPLATE_PACK = "bootstrap4"

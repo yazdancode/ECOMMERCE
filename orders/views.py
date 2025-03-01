@@ -1,4 +1,6 @@
+import requests
 from django.contrib import messages
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views import View
@@ -14,14 +16,16 @@ class CartView(View):
     """
     نمایش سبد خرید برای کاربر
     """
-    def get(self, request):
+    @staticmethod
+    def get(request):
         cart = Cart(request)
         return render(request, "orders/cart.html", {"cart": cart})
 
 
 class CartAddView(View):
     """افزودن محصول به سبد خرید"""
-    def post(self, request, product_id):
+    @staticmethod
+    def post(request, product_id):
         cart = Cart(request)
         product = get_object_or_404(Product, id=product_id)
         form = CartAddForm(request.POST)
@@ -46,7 +50,8 @@ class CartRemoveView(View):
     """
     حذف محصول از سبد خرید
     """
-    def get(self, request, product_id):
+    @staticmethod
+    def get(request, product_id):
         cart = Cart(request)
         product = get_object_or_404(Product, id=product_id)
 
@@ -64,7 +69,8 @@ class OrderDetailView(LoginRequiredMixin, View):
     """
     نمایش جزئیات سفارش فقط برای کاربر لاگین شده
     """
-    def get(self, request, order_id):
+    @staticmethod
+    def get(request, order_id):
         order = get_object_or_404(Order, id=order_id, user=request.user)
         return render(request, 'orders/order.html', {'order': order})
         
@@ -74,7 +80,8 @@ class OrderCreateView(LoginRequiredMixin, View):
     """
     ایجاد سفارش جدید و انتقال داده‌های سبد خرید به سفارش
     """
-    def get(self, request):
+    @staticmethod
+    def get(request):
         cart = Cart(request=request)
 
         if len(cart) == 0:
@@ -92,3 +99,48 @@ class OrderCreateView(LoginRequiredMixin, View):
         cart.clear()
         messages.success(request, "سفارش شما با موفقیت ثبت شد.")
         return redirect('orders:order_detail', order_id=order.id)
+
+
+class OrderPayView(LoginRequiredMixin, View):
+    """
+    پرداخت سفارش
+    """
+
+    @staticmethod
+    def get(request, order_id):
+        try:
+            order = Order.objects.get(id=order_id)
+        except Order.DoesNotExist:
+            return HttpResponse("Order not found", status=404)
+
+        req_data = {
+            'merchant_id': 'XXXXXXXX',
+            'amount': order.get_total_price(),
+            'callback_url': request.build_absolute_uri(reverse('orders:pay_callback')),
+            'description': f'پرداخت سفارش شماره {order.id}',
+            'metadata': {
+                'order_id': order.id,
+                "mobile": request.user.phone_number,
+                "email": request.user.email,
+            }
+        }
+
+        req_headers = {
+            'accept': 'application/json',
+            'Content-Type': 'application/json',
+        }
+
+        try:
+            response = requests.post('https://api.zarinpal.com/pg/v4/payment/request', json=req_data,headers=req_headers)
+            response.raise_for_status()
+
+            authority = response.json().get('data', {}).get('authority')
+
+            if not authority:
+                return HttpResponse("Authorization failed", status=400)
+
+        except requests.RequestException as e:
+            return HttpResponse(f"Error while processing payment request: {str(e)}", status=500)
+
+        return render(request, 'orders/pay.html', {'order': order, 'req_data': req_data})
+

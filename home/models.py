@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.urls import reverse
 
@@ -50,7 +51,7 @@ class Product(models.Model):
     name = models.CharField(max_length=255, verbose_name="نام محصول")
     slug = models.SlugField(max_length=255, unique=True, verbose_name="نامک")
     description = models.TextField(blank=True, verbose_name="توضیحات")
-    stock = models.PositiveIntegerField(default=0, verbose_name='موجودی') 
+    stock = models.PositiveIntegerField(default=0, verbose_name="موجودی")
     price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="قیمت")
     image = models.ImageField(
         blank=True, null=True, upload_to="products/", verbose_name="تصویر"
@@ -70,6 +71,15 @@ class Product(models.Model):
     def get_absolute_url(self):
         """ایجاد لینک برای هر محصول"""
         return reverse("shop:product_detail", args=[self.slug])
+
+    def reduce_stock(self, quantity):
+        """کاهش موجودی هنگام خرید"""
+        if self.stock >= quantity:
+            self.stock -= quantity
+            self.save()
+            return True
+        else:
+            raise ValidationError("محصول مورد نظر موجود نیست.")
 
     class Meta:
         ordering = ("name",)

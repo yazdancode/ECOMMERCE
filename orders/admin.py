@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Order, OrderItem
+from .models import Coupon, Order, OrderItem
 
 
 class OrderItemInline(admin.TabularInline):
@@ -20,5 +20,6 @@ class OrderItemAdmin(admin.ModelAdmin):
     search_fields = ("order__id", "product__name")
 
 
+admin.site.register(Coupon)
 admin.site.register(Order, OrderAdmin)
 admin.site.register(OrderItem, OrderItemAdmin)

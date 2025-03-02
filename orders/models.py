@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.core.validators import MaxValueValidator
 from django.db import models
 
 from home.models import Product
@@ -14,12 +15,17 @@ class Order(models.Model):
     paid = models.BooleanField(default=False, verbose_name="پرداخت")
     created = models.DateTimeField(auto_now_add=True, verbose_name="تاریخ ایجاد")
     updated = models.DateTimeField(auto_now=True, verbose_name="تاریخ به‌روزرسانی")
+    discount = models.IntegerField(blank=True, null=True, default=None)
 
     def __str__(self):
         return f"سفارش {self.id} - کاربر: {self.user}"
 
     def get_total_price(self):
-        return sum(item.get_cost() for item in self.items.all())
+        total = sum(item.get_cost() for item in self.items.all())
+        if self.discount:
+            discount_price = (self.discount / 100) * total
+            return int(total - discount_price)
+        return total
 
     class Meta:
         verbose_name = "سفارش"
@@ -49,3 +55,21 @@ class OrderItem(models.Model):
     class Meta:
         verbose_name = "مورد سفارش"
         verbose_name_plural = "موارد سفارش"
+
+
+class Coupon(models.Model):
+    code = models.CharField(max_length=50, unique=True, verbose_name="کد")
+    valid_from = models.DateTimeField(verbose_name="معتبر از")
+    valid_to = models.DateTimeField(verbose_name="معتبر تا")
+    discount = models.IntegerField(
+        validators=[MaxValueValidator(0), MaxValueValidator(90)], verbose_name="تخفیف"
+    )
+    active = models.BooleanField(default=False, verbose_name="فعال")
+
+    def __str__(self):
+        return self.code
+
+    class Meta:
+        verbose_name = "کوپن"
+        verbose_name_plural = "کوپن‌ها"
+        ordering = ["-valid_from"]
